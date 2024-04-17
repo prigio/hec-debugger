@@ -1,12 +1,15 @@
-FILENAME="hec-debugger"
+FILENAME=hec-debugger
+
 default: help
 
 help:
 	@echo "Available 'make' commands"
-	@echo "  - make local - compiles the executable for the current architecture, useful for testing purposes"
-	@echo "  - make all - compiles the executable for all target architectures"
+	@echo "  - make local - compiles the executable for the current architecture, useful for testing purposes. Uses the local go installation"
+	@echo "  - make alllocal - compiles the executable for all target architectures using a local go installation"
+	@echo "  - make all - compiles the executable for all target architectures. It uses a docker container to avoid the need to install go locally"
 	@echo "  - make run - starts the tool locally"
 	@echo "  - make test - sends some test data to a locally running instance of the tool"
+#	@echo "  - make build_container - builds a container with the app executable inside"
 
 run:
 	@echo "Executing ${FILENAME} on 127.0.0.1:8765"
@@ -25,32 +28,19 @@ test:
 
 local:
 	@echo "Building ${FILENAME}"
-	go build
+	go build -o ${FILENAME}
 
-all: ensure_dirs .linux .osx .osxm1 .windows
+alllocal:
+	@echo "Building ${FILENAME}" for all architectures using local go installation
+	./build_instructions.sh
 
-ensure_dirs:
-	- mkdir -p build/linux_x86_64/
-	- mkdir -p build/darwin_x86_64/
-	- mkdir -p build/darwin_arm_64/
-	- mkdir -p build/windows_x86_64/
+#build_container:
+#	docker build --pull -t ${FILENAME}:latest .
 
 #Environment settings for cross compilation
 #Ref: https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-16-04
 
-.linux:
-	@echo "Compiling for Linux within build/linux_x86_64/"
-	GOOS=linux GOARCH=amd64 go build -o build/linux_x86_64/
 
-.osx:
-	@echo "Compiling for OsX (darwin) build/darwin_x86_64/"
-	GOOS=darwin GOARCH=amd64 go build -o build/darwin_x86_64/
-
-.osxm1:
-	@echo "Compiling for OsX M1 (darwin) build/darwin_arm_64/"
-	GOOS=darwin GOARCH=arm64 go build -o build/darwin_arm_64/
-
-.windows:
-	@echo "Compiling for Windows within build/windows_x86_64/"
-	GOOS=windows GOARCH=amd64 go build -o build/windows_x86_64/
+all:
+	docker run --name --rm "builder-${FILENAME}" -ti -v "$(CURDIR):/workdir" --workdir /workdir golang:1.21 /workdir/build_instructions.sh
 

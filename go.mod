@@ -1,6 +1,6 @@
 module prigio/hec-debugger
 
-go 1.20
+go 1.21
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
